@@ -5,11 +5,14 @@
 Parser::Parser(std::string input) 
     : m_lexer(Lexer(input))  
 {}
+
 void printDequue(const std::deque<std::string>& output){
     for (auto i = output.begin(); i < output.end(); i++){
         std::cout << *i << " ";
     }
 }
+
+
 std::deque<std::string> Parser::getCreateCommand() {
     std::deque<std::string> output;
     output.push_back("CREATE");
@@ -43,6 +46,7 @@ std::deque<std::string> Parser::getCreateCommand() {
             token = m_lexer.getNextToken();
             continue;
         }
+        
         if (token.getType() != TokenType::CLOSE_PARENTHESIS) {
             errorWrongSymbol("NAME or COMMA", token.getValue());
             return std::deque<std::string>();
@@ -253,69 +257,71 @@ std::deque<std::string> Parser::getSelectCommannd()
 
 }
 
-deleteCommandClass Parser::getDeleteCommannd() 
+std::deque<std::string> Parser::getDeleteCommannd() 
 {
+    std::deque<std::string> output;
+    output.push_back("DELETE");
     Token token(m_lexer.getNextToken());
-    deleteCommandClass output;
 
     if (token.getType() == TokenType::FROM) {
-        output.from = true;
+        output.push_back(token.getValue());
         token = m_lexer.getNextToken();
     }
     if (token.getType() == TokenType::NAME) {
-        output.name = token.getValue();
+        output.push_back(token.getValue());
         token = m_lexer.getNextToken();
     } else {
         errorWrongSymbol("NAME", token.getValue());
     }
     if (token.getType() == TokenType::WHERE) {
-        output.where = true;
+        output.push_back(token.getValue());
         token = m_lexer.getNextToken();
 
         if (token.getType() == TokenType::NAME) {
-            output.lvalue = token.getValue();
+            output.push_back(token.getValue());
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("NAME", token.getValue());
         }
         if (token.getType() == TokenType::SIGN) {
-            output.sing = token.getValue();
+            output.push_back(token.getValue());
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("SIGN", token.getValue());
         }
         if (token.getType() == TokenType::VALUE) {
-            output.rvalue = token.getValue();
+            output.push_back(token.getValue());
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("VALUE", token.getValue());
         }
     }
     if (token.getType() == TokenType::STOP) {
-            std::cout << "Name: " << output.name << " Where: " << output.where;
+            printDequue(output);
             return output;
-        } else {
-            errorWrongSymbol(";", token.getValue());
-            return deleteCommandClass();
         }
+    errorWrongSymbol(";", token.getValue());
+    return std::deque<std::string>();
+
 }
 
 void Parser::getNextCommand() 
 {
     Token token(m_lexer.getNextToken());
     std::deque<std::string> arguments{};
+
     switch (token.getType()) {
         case TokenType::CREATE:
-            getCreateCommand();
+            arguments = getCreateCommand();
             break;
         case TokenType::INSERT:
-            getInsertCommannd();
+            arguments = getInsertCommannd();
             break;
         case TokenType::SELECT:
-            getSelectCommannd();
+            arguments = getSelectCommannd();
             break;
         case TokenType::DELETE:
-            getDeleteCommannd();
+            arguments = getDeleteCommannd();
             break;
         default:
             std::cout << "wrong command";
@@ -324,6 +330,7 @@ void Parser::getNextCommand()
     if (arguments.empty()){
         std::cout << "ERROR";
     }
+
 }
 
 void Parser::errorWrongSymbol(std::string waiting, std::string actual) 

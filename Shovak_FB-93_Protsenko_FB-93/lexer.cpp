@@ -4,13 +4,11 @@
 #include <iostream>
 //Helper funcs
 
-
 Lexer::Lexer(const std::string& input)
     : m_input(input)
     , m_currentIndex(0)
     , m_currentChar(m_input[m_currentIndex])
 {}
-
 
 Token Lexer::getNextToken() 
 {    
@@ -36,9 +34,6 @@ Token Lexer::getNextToken()
         } else if (m_currentChar == '*') {
             skipToNextChar();
             return Token(TokenType::ASTERIX, std::string(1, m_input[m_currentIndex - 1])); 
-        } else if (m_currentChar == '|') {
-            skipToNextChar();
-            return Token(TokenType::OR, std::string(1, m_input[m_currentIndex - 1]));   
         } else if (m_currentChar == ';') {
             return Token(TokenType::STOP, std::string(1, m_currentChar));
         }
@@ -46,6 +41,7 @@ Token Lexer::getNextToken()
     }
     return Token(TokenType::ERROR, std::string("Wrong symbol \'" + std::string(1, m_currentChar) + "\' was found"));
 }
+
 void Lexer::skipToNextChar() 
 {
     m_currentIndex++;

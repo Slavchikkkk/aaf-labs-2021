@@ -21,9 +21,7 @@ enum TokenType {
     CLOSE_PARENTHESIS,
     SIGN,
     COMMA,
-    APOSTROPHE,
     ASTERIX,
-    OR,
     STOP,
     ERROR
 };
@@ -33,10 +31,12 @@ class Token {
     public:
     Token(TokenType type, const std::string& value);
     Token();
+
     TokenType getType();
     std::string& getValue();
     bool isEmpty();
     friend std::ostream& operator<<(std::ostream& os, const Token& token);
+    
     private:
     TokenType m_type;
     std::string m_value;

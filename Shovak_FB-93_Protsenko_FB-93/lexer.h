@@ -17,6 +17,7 @@ class Lexer {
     Token tokenFromString();
     Token tokenFromValue();
     Token tokenFromSign();
+    
     private:
     std::string m_input;
     int m_currentIndex;

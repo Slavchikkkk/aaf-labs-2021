@@ -21,11 +21,6 @@ std::string& Token::getValue()
     return m_value;
 }
 
-bool Token::isEmpty() 
-{
-    return m_value == "" && m_type == TokenType::UNDEFINED;
-}
-
 std::ostream& operator<<(std::ostream& os, const Token& token) 
 {
     os << "Type: " << token.m_type << " " << "Value: " << token.m_value << std::endl;
