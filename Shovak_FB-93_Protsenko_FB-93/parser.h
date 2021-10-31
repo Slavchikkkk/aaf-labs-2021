@@ -3,16 +3,16 @@
 
 #include "lexer.h"
 #include <string>
-#include <deque>
+#include <vector>
 
 class Parser {
     public:
     Parser(std::string input);
 
-    std::deque<std::string> getCreateCommand();
-    std::deque<std::string> getInsertCommannd();
-    std::deque<std::string> getSelectCommannd();
-    std::deque<std::string> getDeleteCommannd();
+    std::vector<std::string> getCreateCommand();
+    std::vector<std::string> getInsertCommannd();
+    std::vector<std::string> getSelectCommannd();
+    std::vector<std::string> getDeleteCommannd();
 
     void getNextCommand();
     

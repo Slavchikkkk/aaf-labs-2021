@@ -6,15 +6,15 @@ Parser::Parser(std::string input)
     : m_lexer(Lexer(input))  
 {}
 
-void printDequue(const std::deque<std::string>& output){
+void printDequue(const std::vector<std::string>& output){
     for (auto i = output.begin(); i < output.end(); i++){
         std::cout << *i << " ";
     }
 }
 
 
-std::deque<std::string> Parser::getCreateCommand() {
-    std::deque<std::string> output;
+std::vector<std::string> Parser::getCreateCommand() {
+    std::vector<std::string> output;
     output.push_back("CREATE");
     Token token(m_lexer.getNextToken());
 
@@ -23,14 +23,14 @@ std::deque<std::string> Parser::getCreateCommand() {
         token = m_lexer.getNextToken();
     } else {
         errorWrongSymbol("NAME", token.getValue());
-        return std::deque<std::string>();
+        return std::vector<std::string>();
     }
 
     if (token.getType() == TokenType::OPEN_PARENTHESIS) {
         token = m_lexer.getNextToken();
     } else {
         errorWrongSymbol("(", token.getValue());
-        return std::deque<std::string>();
+        return std::vector<std::string>();
     }
     do {
         if (token.getType() == TokenType::NAME) {
@@ -49,7 +49,7 @@ std::deque<std::string> Parser::getCreateCommand() {
         
         if (token.getType() != TokenType::CLOSE_PARENTHESIS) {
             errorWrongSymbol("NAME or COMMA", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         } 
 
     } while (token.getType() != TokenType::CLOSE_PARENTHESIS);
@@ -60,12 +60,12 @@ std::deque<std::string> Parser::getCreateCommand() {
         return output;
     }
     errorWrongSymbol(";", token.getValue());
-    return std::deque<std::string>();
+    return std::vector<std::string>();
 }
 
-std::deque<std::string> Parser::getInsertCommannd() 
+std::vector<std::string> Parser::getInsertCommannd() 
 {
-    std::deque<std::string> output;
+    std::vector<std::string> output;
     output.push_back("INSERT");
     Token token(m_lexer.getNextToken());
 
@@ -79,14 +79,14 @@ std::deque<std::string> Parser::getInsertCommannd()
         token = m_lexer.getNextToken();
     } else {
         errorWrongSymbol("NAME", token.getValue());
-        return std::deque<std::string>();
+        return std::vector<std::string>();
     }
 
     if (token.getType() == TokenType::OPEN_PARENTHESIS) {
         token = m_lexer.getNextToken();
     } else {
         errorWrongSymbol("(", token.getValue());
-        return std::deque<std::string>();
+        return std::vector<std::string>();
     }
 
     do {
@@ -102,7 +102,7 @@ std::deque<std::string> Parser::getInsertCommannd()
         }
         if (token.getType() != TokenType::CLOSE_PARENTHESIS) {
             errorWrongSymbol("VALLUE or COMMA", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         } 
 
     } while (token.getType() != TokenType::CLOSE_PARENTHESIS);
@@ -114,12 +114,12 @@ std::deque<std::string> Parser::getInsertCommannd()
         return output;
     }
     errorWrongSymbol(";", token.getValue());
-    return std::deque<std::string>();
+    return std::vector<std::string>();
 }
 
-std::deque<std::string> Parser::getSelectCommannd() 
+std::vector<std::string> Parser::getSelectCommannd() 
 {
-    std::deque<std::string> output;
+    std::vector<std::string> output;
     output.push_back("SELECT");
     Token token(m_lexer.getNextToken());
     bool isLeftJoinRestricted = false;
@@ -140,7 +140,7 @@ std::deque<std::string> Parser::getSelectCommannd()
             }
             if (token.getType() != TokenType::FROM) {
                 errorWrongSymbol("NAME or COMMA", token.getValue());
-                return std::deque<std::string>();
+                return std::vector<std::string>();
             } 
 
         } while (token.getType() != TokenType::FROM);
@@ -148,7 +148,7 @@ std::deque<std::string> Parser::getSelectCommannd()
         token = m_lexer.getNextToken();
     } else {
         errorWrongSymbol("NAME or ASTERIX", token.getValue());
-        return std::deque<std::string>();
+        return std::vector<std::string>();
     }
 
     if (token.getType() == TokenType::NAME) {
@@ -156,7 +156,7 @@ std::deque<std::string> Parser::getSelectCommannd()
         token = m_lexer.getNextToken();
     } else {
         errorWrongSymbol("NAME", token.getValue());
-        return std::deque<std::string>();
+        return std::vector<std::string>();
     }
 
     if (token.getType() == TokenType::LEFT_JOIN) {
@@ -168,7 +168,7 @@ std::deque<std::string> Parser::getSelectCommannd()
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("NAME", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         }
 
         if (token.getType() == TokenType::ON) {
@@ -180,32 +180,32 @@ std::deque<std::string> Parser::getSelectCommannd()
                 token = m_lexer.getNextToken();
             } else {
                 errorWrongSymbol("NAME", token.getValue());
-                return std::deque<std::string>();
+                return std::vector<std::string>();
             }
             if (token.getType() == TokenType::SIGN) {
                 output.push_back(token.getValue());
                 token = m_lexer.getNextToken();
             } else {
                 errorWrongSymbol("SIGN", token.getValue());
-                return std::deque<std::string>();
+                return std::vector<std::string>();
             }
             if (token.getType() == TokenType::NAME) {
                 output.push_back(token.getValue());
                 token = m_lexer.getNextToken();
             } else {
                 errorWrongSymbol("NAME", token.getValue());
-                return std::deque<std::string>();
+                return std::vector<std::string>();
             }
             if (token.getType() == TokenType::STOP) {
                 printDequue(output);
                 return output;
             } else {
                 errorWrongSymbol(";", token.getValue());
-                return std::deque<std::string>();
+                return std::vector<std::string>();
             }
         } else {
             errorWrongSymbol("ON", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         }
     } else if (token.getType() == TokenType::WHERE) {
         isLeftJoinRestricted = true;
@@ -214,7 +214,7 @@ std::deque<std::string> Parser::getSelectCommannd()
     if (token.getType() == TokenType::WHERE) {
         if (!isLeftJoinRestricted) {
             std::cout << "LEFT_JOIN afrer WHERE";
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         }
         token = m_lexer.getNextToken();
 
@@ -223,28 +223,28 @@ std::deque<std::string> Parser::getSelectCommannd()
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("NAME", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         }
         if (token.getType() == TokenType::SIGN) {
             output.push_back(token.getValue());
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("SIGN", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         }
         if (token.getType() == TokenType::VALUE) {
             output.push_back(token.getValue());
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("VALUE", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         }
         if (token.getType() == TokenType::STOP) {
             printDequue(output);
             return output;
         } else {
             errorWrongSymbol(";", token.getValue());
-            return std::deque<std::string>();
+            return std::vector<std::string>();
         }
     }
 
@@ -253,13 +253,13 @@ std::deque<std::string> Parser::getSelectCommannd()
         return output;
     }
     errorWrongSymbol(";", token.getValue());
-    return std::deque<std::string>();
+    return std::vector<std::string>();
 
 }
 
-std::deque<std::string> Parser::getDeleteCommannd() 
+std::vector<std::string> Parser::getDeleteCommannd() 
 {
-    std::deque<std::string> output;
+    std::vector<std::string> output;
     output.push_back("DELETE");
     Token token(m_lexer.getNextToken());
 
@@ -301,14 +301,14 @@ std::deque<std::string> Parser::getDeleteCommannd()
             return output;
         }
     errorWrongSymbol(";", token.getValue());
-    return std::deque<std::string>();
+    return std::vector<std::string>();
 
 }
 
 void Parser::getNextCommand() 
 {
     Token token(m_lexer.getNextToken());
-    std::deque<std::string> arguments{};
+    std::vector<std::string> arguments{};
 
     switch (token.getType()) {
         case TokenType::CREATE:
