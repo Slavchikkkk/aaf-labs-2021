@@ -8,17 +8,13 @@ int main(){
     database.executeCommand(input);
     std::cout << std::endl;
 
-    input = "CREATE her (owner_id INDEXED, owner_name, owner_age);";
-    database.executeCommand(input);
-    std::cout << std::endl;
-
-    input = "INSERT INTO per (\"1\", \"pedro\", \"20\");";
+    input = "INSERT INTO owners (\"1\", \"pedro\", \"20\");";
     database.executeCommand(input);
     std::cout << std::endl;
 
     database.printTables();
 
-    input = "DELETE her WHERE owner_id = \"1\";";
+    input = "DELETE owners WHERE owner_id = \"1\";";
     database.executeCommand(input);
     std::cout << std::endl;
 
