@@ -1,5 +1,5 @@
 #include "parser.h"
-
+    
 #include <iostream>
 
 Parser::Parser(std::string input) 
@@ -70,7 +70,6 @@ std::vector<std::string> Parser::getInsertCommannd()
     Token token(m_lexer.getNextToken());
 
     if (token.getType() == TokenType::INTO) {
-        output.push_back(token.getValue());
         token = m_lexer.getNextToken();
     }
 
@@ -305,7 +304,7 @@ std::vector<std::string> Parser::getDeleteCommannd()
 
 }
 
-void Parser::getNextCommand() 
+std::vector<std::string> Parser::getNextCommand() 
 {
     Token token(m_lexer.getNextToken());
     std::vector<std::string> arguments{};
@@ -330,6 +329,7 @@ void Parser::getNextCommand()
     if (arguments.empty()){
         std::cout << "ERROR";
     }
+    return arguments;
 
 }
 

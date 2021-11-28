@@ -9,14 +9,15 @@ class Parser {
     public:
     Parser(std::string input);
 
+   
+    std::vector<std::string> getNextCommand();
+    
+    private:
     std::vector<std::string> getCreateCommand();
     std::vector<std::string> getInsertCommannd();
     std::vector<std::string> getSelectCommannd();
     std::vector<std::string> getDeleteCommannd();
 
-    void getNextCommand();
-    
-    private:
     void errorWrongSymbol(std::string waiting, std::string actual);
     
     private:
