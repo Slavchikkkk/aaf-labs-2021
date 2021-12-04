@@ -4,6 +4,7 @@
 #include "parser.h"
 #include <string>
 #include <vector>
+#include <map>
 
 class Table{
     public:
@@ -16,12 +17,15 @@ class Table{
     void deleteAllRows();
     int getCollumnNameIndex(const std::string& name);
     void deleteWithCondition(const std::vector<std::string>& condition);
-    void printTable();
+    void printTable() const;
+    void setIndexedRow(int index, std::string name);
+    void deleteFromIndexed(int rowIndex);
     private:
     std::vector<std::string> m_collumnNames;
     std::string m_name;
     int m_collumnCount;
     std::vector<std::vector<std::string>> m_rows;
+    std::map<std::string, std::map<std::string, std::vector<int>>> m_indexedRows;
 };
 
 
