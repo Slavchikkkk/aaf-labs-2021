@@ -48,7 +48,7 @@ void Lexer::skipToNextChar()
     if (m_currentIndex < m_input.length()) { 
         m_currentChar = m_input[m_currentIndex];
     } else {
-        throw;
+        std::cout << "Index is higher then length";
     }
 }
 
@@ -59,6 +59,9 @@ Token Lexer::tokenFromString()
     {
         result.push_back(m_currentChar);
         skipToNextChar();
+        if (m_currentIndex >= m_input.size()) {
+            return Token(TokenType::ERROR, "Out on bound");
+        }
     }
 
     if (result == "CREATE") {

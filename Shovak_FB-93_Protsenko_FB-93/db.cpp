@@ -2,21 +2,21 @@
 #include <iostream>
 #include <algorithm>
 
-std::vector<std::string> deleteFirst(std::vector<std::string>& arr)
-{
-    auto start = arr.begin() + 1;
- 
-    std::vector<std::string> result(arr.size()-1);
- 
-    copy(start, arr.end(), result.begin());
- 
-    return result;
+void printHorizontalLane(int count) {
+    for (int i = 0; i <= count; i++){
+        std::cout << "_";
+    }
+    std::cout << std::endl;
 }
 
 void db::executeCommand(std::string input) 
 {
     Parser parser(input);
     std::vector<std::string> arguments = parser.getNextCommand();
+    if (arguments.empty()){
+        std::cout << "Please check input" << std::endl;
+        return;
+    }
     std::string command = arguments[0];
     arguments.erase(arguments.begin());
 
@@ -27,10 +27,13 @@ void db::executeCommand(std::string input)
         status = insertInTable(arguments);
     } else if (command == "DELETE") {
         status = deleteInTable(arguments);
+    } else if (command == "SELECT") {
+        status = selectFromTable(arguments);
+    } else {
+        std::cout << "Wrong command";
     }
 
     if (!status) {
-        std::cout << std::endl << command << " - is wrong command";
     }
 }
 
@@ -47,7 +50,6 @@ bool db::createTable(std::vector<std::string>& parameters)
 {
     int pos = getTableIndex(parameters[0]);
     if (pos != -1) {
-        //error
         std::cout << "Table " << parameters[0] << " already exists.\n";
         return false;
     }
@@ -56,7 +58,7 @@ bool db::createTable(std::vector<std::string>& parameters)
 
     parameters.erase(parameters.begin());
     std::vector<std::string> arguments;
-    for (auto i : parameters) {
+    for (const auto& i : parameters) {
         if (i == "INDEXED") {
             m_tables[pos].setIndexedRow(arguments.size() - 1, arguments.back());
             continue;
@@ -65,6 +67,8 @@ bool db::createTable(std::vector<std::string>& parameters)
     }
     
     m_tables[pos].setCollumnNames(arguments);
+
+    std::cout << "Table " << m_tables[pos].getName() << " created" << std::endl;
     return true;
 }
 
@@ -72,7 +76,6 @@ bool db::insertInTable(std::vector<std::string>& parameters)
 {
     int pos = getTableIndex(parameters[0]);
     if (pos == -1) {
-        //error
         std::cout << "Table " << parameters[0] << " does not exist." << std::endl;
         return false;
     }
@@ -84,7 +87,7 @@ bool db::insertInTable(std::vector<std::string>& parameters)
     }
     m_tables[pos].insertRow(parameters);
 
-
+    std::cout << "New row inserted to " << m_tables[pos].getName() << std::endl;
     return true;
 }
 
@@ -92,17 +95,140 @@ bool db::deleteInTable(std::vector<std::string>& parameters)
 {
     int pos = getTableIndex(parameters[0]);
     if (pos == -1) {
-        //error
+        std::cout << "Table " << parameters[0] << " not found" << std::endl;
         return false;
     }
     parameters.erase(parameters.begin());
     if (parameters.size() >= 1 && parameters[0] == "WHERE") {
         parameters.erase(parameters.begin());
-        m_tables[pos].deleteWithCondition(parameters);
+        if (!m_tables[pos].deleteWithCondition(parameters)) {
+            return false;
+        }
     } else {
         m_tables[pos].deleteAllRows();
     }
 
+    return true;
+}
+
+bool db::selectFromTable(std::vector<std::string>& parameters) 
+{
+    std::vector<std::string> collums;
+    int pos = -1;
+    if (parameters[0] == "*") {
+        parameters.erase(parameters.begin());
+        parameters.erase(parameters.begin());
+        pos = getTableIndex(parameters[0]);
+        if (pos == -1) {
+            std::cout << "Table " << parameters[0] << " not found" << std::endl;
+            return false;
+        }
+        parameters.erase(parameters.begin());
+        collums = m_tables[pos].getCollumnNames();
+    } else {
+        for (const auto& param : parameters) {
+            if (param == "FROM") {
+                break;
+            }
+            collums.push_back(param);
+        }
+        parameters.erase(parameters.begin(), parameters.begin() + collums.size());
+        pos = getTableIndex(parameters[0]);
+        if (pos == -1) {
+            std::cout << "Table " << parameters[0] << " not found" << std::endl;
+            return false;
+        }
+        for (const auto& collum : collums) {
+            if (std::find(m_tables[pos].getCollumnNames().begin(), m_tables[pos].getCollumnNames().end(), collum) == m_tables[pos].getCollumnNames().end()){
+                if (std::find(parameters.begin(), parameters.end(), "LEFT_JOIN") != parameters.end()){
+                    continue;
+                }
+                std::cout << "There no collum " << collum << " in table " << m_tables[pos].getName() << std::endl;
+                return false;
+            }
+        }
+    }
+    if (parameters.empty()) {
+        if (collums.size() == m_tables[pos].getCollumnCount()) {
+            m_tables[pos].printTable();
+            return true;
+        } else {
+            m_tables[pos].printCollums(collums);
+            return true;
+        }
+    } else if (parameters[0] == "WHERE") {
+        parameters.erase(parameters.begin());
+        std::vector<int> rows = m_tables[pos].getRowsFromIndexed(parameters[0], parameters[2]);
+        if (!rows.empty()) {
+            if (parameters[1] == "=") {
+                m_tables[pos].printCollumsOnRows(collums, rows);
+            } else if (parameters[1] == "!=") {
+                std::vector<int> newRows;
+                for (auto i = 0; i < m_tables[pos].getRowCount(); i++) {
+                    if (std::find(rows.begin(), rows.end(), i) != rows.begin()) {
+                        continue;
+                    }
+                    newRows.push_back(i);
+                }
+                m_tables[pos].printCollumsOnRows(collums, newRows);
+            }
+        }
+        else {
+            if (parameters[1] == "=") {
+                for (int i = 0; i < m_tables[pos].getCollumnCount(); i++) {
+                    if (m_tables[pos].getValue(i, m_tables[pos].getCollumnNameIndex(parameters[0])) == parameters[2]) {
+                        rows.push_back(i);
+                    }
+                }
+            } else {
+                for (int i = 0; i < m_tables[pos].getCollumnCount(); i++) {
+                    if (m_tables[pos].getValue(i, m_tables[pos].getCollumnNameIndex(parameters[0])) != parameters[2]) {
+                        rows.push_back(i);
+                    }
+                }
+            }
+            m_tables[pos].printCollumsOnRows(collums, rows);
+        }
+    } else if (parameters[0] == "LEFT_JOIN") {
+        parameters.erase(parameters.begin());
+        int pos2 = getTableIndex(parameters[0]);
+        if (pos2 = -1) {
+            std::cout << "Table " << parameters[0] << " not found" << std::endl;
+            return false;
+        }
+        parameters.erase(parameters.begin());
+        std::vector<std::string> collums1;
+        std::vector<std::string> collums2;
+        for (const auto& collum : collums){
+            if (std::find(m_tables[pos].getCollumnNames().begin(), m_tables[pos].getCollumnNames().end(), collum) != m_tables[pos].getCollumnNames().end()){
+                collums1.push_back(collum);
+            } else if (std::find(m_tables[pos2].getCollumnNames().begin(), m_tables[pos2].getCollumnNames().end(), collum) != m_tables[pos2].getCollumnNames().end()){
+                collums2.push_back(collum);
+            } else {
+                std::cout << "Collumn " << collum << " not found in " << m_tables[pos].getName() << " or " << m_tables[pos2].getName() << std::endl;
+                return false;
+            }
+        }
+        Table leftJoin("resultTable");
+        leftJoin.setCollumnNames(collums);
+        for (const auto& row : m_tables[pos].getRows()){
+            std::vector<std::string> result;
+            for (const auto& collumn : collums1){
+                result.push_back(row[m_tables[pos].getCollumnNameIndex(collumn)]);
+            }
+            for (auto i = 0; i < abs(collums1.size() - collums2.size()); i++){
+                result.push_back("");
+            }
+            leftJoin.insertRow(result);
+            result.clear();
+        }
+        if (parameters[1] == "=") {
+            
+        } else if (parameters[1] == "!=") {
+
+        }
+
+    }
     return true;
 }
 
@@ -144,7 +270,7 @@ void Table::insertRow(const std::vector<std::string>& row)
 {
     m_rows.push_back(row);
     int row_index = m_rows.size() - 1;
-    for (auto indexed : m_indexedRows) {
+    for (const auto& indexed : m_indexedRows) {
         const std::string& columnName = indexed.first;
         int columnIndex = getCollumnNameIndex(columnName);   
         auto tree = indexed.second;
@@ -178,7 +304,7 @@ int Table::getCollumnNameIndex(const std::string& name)
 
 
 void Table::deleteFromIndexed(int rowIndex) {
-    for (auto indexed : m_indexedRows) {
+    for (const auto& indexed : m_indexedRows) {
         int columnIndex = getCollumnNameIndex(indexed.first);   
         auto tree = indexed.second;
         auto vec = tree[m_rows[rowIndex][columnIndex]];
@@ -190,11 +316,87 @@ void Table::deleteFromIndexed(int rowIndex) {
     }
 }
 
-void Table::deleteWithCondition(const std::vector<std::string>& condition) 
+std::vector<std::string> Table::getCollumnNames() 
+{
+    return m_collumnNames;
+}
+
+void Table::printCollums(std::vector<std::string> collums) 
+{
+    std::cout << "\t" << m_name << "\t" << std::endl;
+    printHorizontalLane(m_collumnCount*15);
+    for (const auto& i : collums){
+        std::cout << i << '\t' << '|';
+    }
+    std::cout << std::endl;
+    printHorizontalLane(m_collumnCount*15);
+    for (const auto& row: m_rows){
+        for (const auto& collum : collums) {
+            std::cout << row[getCollumnNameIndex(collum)] << '\t' << '|';
+        }
+        std::cout << std::endl;
+        printHorizontalLane(m_collumnCount*15);
+    }
+}
+
+std::vector<int> Table::getRowsFromIndexed(std::string collumName, std::string vallue) 
+{
+    if (m_indexedRows.find(collumName) != m_indexedRows.end()) {
+        return m_indexedRows[collumName][vallue];
+    }
+    return std::vector<int>();
+}
+
+void Table::printCollumsOnRows(std::vector<std::string> collums, std::vector<int> rows) 
+{
+    std::cout << "\t" << m_name << "\t" << std::endl;
+    printHorizontalLane(m_collumnCount*15);
+    for (const auto& i : collums){
+        std::cout << i << '\t' << '|';
+    }
+    std::cout << std::endl;
+    printHorizontalLane(m_collumnCount*15);
+    for (const auto& row: rows){
+        for (const auto& collum : collums) {
+            std::cout << m_rows[row][getCollumnNameIndex(collum)] << '\t' << '|';
+        }
+        std::cout << std::endl;
+        printHorizontalLane(m_collumnCount*15);
+    }
+}
+
+int Table::getRowCount() 
+{
+    return m_rows.size();
+}
+
+const std::vector<std::vector<std::string>>& Table::getRows() 
+{
+    return m_rows;
+}
+
+void Table::insertVallue(int ypos, int xpos, std::string vallue) 
+{
+    if (ypos < m_rows.size() && xpos < m_collumnNames.size()) {
+        m_rows[ypos][xpos] = vallue;
+    }
+}
+
+std::string Table::getValue(int ypos, int xpos) 
+{
+    if (ypos < m_rows.size() && xpos < m_collumnNames.size()) {
+        return m_rows[ypos][xpos];
+    }
+    std::cout << "Wrong index in getValue" << std::endl;
+    return std::string();
+}
+
+bool Table::deleteWithCondition(const std::vector<std::string>& condition) 
 {
     int pos = getCollumnNameIndex(condition[0]);
     if (pos == -1) {
-        //error
+        std::cout << "There no column " << condition[0] << " in table " << m_name << std::endl;
+        return false;
     }
     if (condition[1] == "=") {
         for (int i = 0; i < m_rows.size(); i++){
@@ -211,13 +413,7 @@ void Table::deleteWithCondition(const std::vector<std::string>& condition)
             }
         }
     }
-}
-
-void printHorizontalLane(int count) {
-    for (int i = 0; i <= count; i++){
-        std::cout << "_";
-    }
-    std::cout << std::endl;
+    return true;
 }
 
 void Table::printTable() const

@@ -1,27 +1,23 @@
 #include "db.h"
 #include "iostream"
+#include <string>
 
 int main(){
-    std::string input = "CREATE owners (owner_id INDEXED, owner_name, owner_age);";
+    db database{};
+    char c;
+    std::string input;
+    while (true) {
+        std::cout << "Enter command (type EXIT; to end programm): " << std::endl;
+        do {
+        c = getchar();
+        input.push_back(c);
+        } while (c != ';');
+        if (input == "EXIT;") {
+            break;
+        }
+        database.executeCommand(input);
+        input.clear();
+    }
 
-    db database;
-    database.executeCommand(input);
-    std::cout << std::endl;
-
-    input = "CREATE her (owner_id INDEXED, owner_name, owner_age);";
-    database.executeCommand(input);
-    std::cout << std::endl;
-
-    input = "INSERT INTO her (\"1\", \"pedro\", \"20\");";
-    database.executeCommand(input);
-    std::cout << std::endl;
-
-    database.printTables();
-
-    input = "DELETE her WHERE owner_id = \"1\";";
-    database.executeCommand(input);
-    std::cout << std::endl;
-
-    database.printTables();
     return 0;
 }

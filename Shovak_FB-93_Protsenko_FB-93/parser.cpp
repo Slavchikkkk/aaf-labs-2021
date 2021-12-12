@@ -6,12 +6,6 @@ Parser::Parser(std::string input)
     : m_lexer(Lexer(input))  
 {}
 
-void printDequue(const std::vector<std::string>& output){
-    for (auto i = output.begin(); i < output.end(); i++){
-        std::cout << *i << " ";
-    }
-}
-
 
 std::vector<std::string> Parser::getCreateCommand() {
     std::vector<std::string> output;
@@ -56,7 +50,6 @@ std::vector<std::string> Parser::getCreateCommand() {
 
     token = m_lexer.getNextToken();
     if (token.getType() == TokenType::STOP) {
-        printDequue(output);
         return output;
     }
     errorWrongSymbol(";", token.getValue());
@@ -109,7 +102,6 @@ std::vector<std::string> Parser::getInsertCommannd()
     token = m_lexer.getNextToken();
     
     if (token.getType() == TokenType::STOP) {
-        printDequue(output);
         return output;
     }
     errorWrongSymbol(";", token.getValue());
@@ -126,6 +118,13 @@ std::vector<std::string> Parser::getSelectCommannd()
     if (token.getType() == TokenType::ASTERIX) {
         output.push_back(token.getValue());
         token = m_lexer.getNextToken();
+        if (token.getType() == TokenType::FROM) {
+            output.push_back(token.getValue());
+            token = m_lexer.getNextToken();
+        } else {
+            errorWrongSymbol("FROM", token.getValue());
+            return std::vector<std::string>();
+        }
     } else if (token.getType() == TokenType::NAME) {
         do {
             if (token.getType() == TokenType::NAME) {
@@ -171,7 +170,6 @@ std::vector<std::string> Parser::getSelectCommannd()
         }
 
         if (token.getType() == TokenType::ON) {
-            output.push_back(token.getValue());
             token = m_lexer.getNextToken();
 
             if (token.getType() == TokenType::NAME) {
@@ -196,7 +194,6 @@ std::vector<std::string> Parser::getSelectCommannd()
                 return std::vector<std::string>();
             }
             if (token.getType() == TokenType::STOP) {
-                printDequue(output);
                 return output;
             } else {
                 errorWrongSymbol(";", token.getValue());
@@ -239,7 +236,6 @@ std::vector<std::string> Parser::getSelectCommannd()
             return std::vector<std::string>();
         }
         if (token.getType() == TokenType::STOP) {
-            printDequue(output);
             return output;
         } else {
             errorWrongSymbol(";", token.getValue());
@@ -248,7 +244,6 @@ std::vector<std::string> Parser::getSelectCommannd()
     }
 
     if (token.getType() == TokenType::STOP) {
-        printDequue(output);
         return output;
     }
     errorWrongSymbol(";", token.getValue());
@@ -296,7 +291,6 @@ std::vector<std::string> Parser::getDeleteCommannd()
         }
     }
     if (token.getType() == TokenType::STOP) {
-            printDequue(output);
             return output;
         }
     errorWrongSymbol(";", token.getValue());
@@ -323,11 +317,8 @@ std::vector<std::string> Parser::getNextCommand()
             arguments = getDeleteCommannd();
             break;
         default:
-            std::cout << "wrong command";
+            std::cout << "Wrong command" << std::endl;
             break;
-    }
-    if (arguments.empty()){
-        std::cout << "ERROR";
     }
     return arguments;
 
