@@ -25,9 +25,10 @@ class Table{
     std::vector<int> getRowsFromIndexed(std::string collumName, std::string vallue);
     void printCollumsOnRows(std::vector<std::string> collums, std::vector<int> rows);
     int getRowCount();
-    const std::vector<std::vector<std::string>>& getRows();
+    std::vector<std::vector<std::string>>& getRows();
     void insertVallue(int ypos, int xpos, std::string vallue);
     std::string getValue(int ypos, int xpos);
+    void setValue(int ypos, int xpos, std::string value);
     private:
     std::vector<std::string> m_collumnNames;
     std::string m_name;
@@ -35,7 +36,6 @@ class Table{
     std::vector<std::vector<std::string>> m_rows;
     std::map<std::string, std::map<std::string, std::vector<int>>> m_indexedRows;
 };
-
 
 class db {
     public:
@@ -52,8 +52,5 @@ class db {
     private:
     std::vector<Table> m_tables;
 };
-
-
-
 
  #endif // __DB_H__

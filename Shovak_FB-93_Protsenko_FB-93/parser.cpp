@@ -195,20 +195,18 @@ std::vector<std::string> Parser::getSelectCommannd()
             }
             if (token.getType() == TokenType::STOP) {
                 return output;
-            } else {
-                errorWrongSymbol(";", token.getValue());
-                return std::vector<std::string>();
             }
         } else {
             errorWrongSymbol("ON", token.getValue());
             return std::vector<std::string>();
         }
     } else if (token.getType() == TokenType::WHERE) {
+        output.push_back(token.getValue());
         isLeftJoinRestricted = true;
     }
 
     if (token.getType() == TokenType::WHERE) {
-        if (!isLeftJoinRestricted) {
+        if (isLeftJoinRestricted) {
             std::cout << "LEFT_JOIN afrer WHERE";
             return std::vector<std::string>();
         }

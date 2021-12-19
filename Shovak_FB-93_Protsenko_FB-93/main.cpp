@@ -12,7 +12,7 @@ int main(){
         c = getchar();
         input.push_back(c);
         } while (c != ';');
-        if (input == "EXIT;") {
+        if (input.find("EXIT;") != std::string::npos) {
             break;
         }
         database.executeCommand(input);

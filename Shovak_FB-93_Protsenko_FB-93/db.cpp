@@ -132,12 +132,17 @@ bool db::selectFromTable(std::vector<std::string>& parameters)
             }
             collums.push_back(param);
         }
-        parameters.erase(parameters.begin(), parameters.begin() + collums.size());
+
+        for (int i = 0; i <= collums.size(); i++){
+            parameters.erase(parameters.begin());
+        }
+        
         pos = getTableIndex(parameters[0]);
         if (pos == -1) {
             std::cout << "Table " << parameters[0] << " not found" << std::endl;
             return false;
         }
+        parameters.erase(parameters.begin());
         for (const auto& collum : collums) {
             if (std::find(m_tables[pos].getCollumnNames().begin(), m_tables[pos].getCollumnNames().end(), collum) == m_tables[pos].getCollumnNames().end()){
                 if (std::find(parameters.begin(), parameters.end(), "LEFT_JOIN") != parameters.end()){
@@ -162,10 +167,10 @@ bool db::selectFromTable(std::vector<std::string>& parameters)
         if (!rows.empty()) {
             if (parameters[1] == "=") {
                 m_tables[pos].printCollumsOnRows(collums, rows);
-            } else if (parameters[1] == "!=") {
+            } else {
                 std::vector<int> newRows;
                 for (auto i = 0; i < m_tables[pos].getRowCount(); i++) {
-                    if (std::find(rows.begin(), rows.end(), i) != rows.begin()) {
+                    if (std::find(rows.begin(), rows.end(), i) != rows.end()) {
                         continue;
                     }
                     newRows.push_back(i);
@@ -175,13 +180,13 @@ bool db::selectFromTable(std::vector<std::string>& parameters)
         }
         else {
             if (parameters[1] == "=") {
-                for (int i = 0; i < m_tables[pos].getCollumnCount(); i++) {
+                for (int i = 0; i < m_tables[pos].getRowCount(); i++) {
                     if (m_tables[pos].getValue(i, m_tables[pos].getCollumnNameIndex(parameters[0])) == parameters[2]) {
                         rows.push_back(i);
                     }
                 }
             } else {
-                for (int i = 0; i < m_tables[pos].getCollumnCount(); i++) {
+                for (int i = 0; i < m_tables[pos].getRowCount(); i++) {
                     if (m_tables[pos].getValue(i, m_tables[pos].getCollumnNameIndex(parameters[0])) != parameters[2]) {
                         rows.push_back(i);
                     }
@@ -192,43 +197,115 @@ bool db::selectFromTable(std::vector<std::string>& parameters)
     } else if (parameters[0] == "LEFT_JOIN") {
         parameters.erase(parameters.begin());
         int pos2 = getTableIndex(parameters[0]);
-        if (pos2 = -1) {
+        if (pos2 == -1) {
             std::cout << "Table " << parameters[0] << " not found" << std::endl;
             return false;
         }
         parameters.erase(parameters.begin());
         std::vector<std::string> collums1;
         std::vector<std::string> collums2;
-        for (const auto& collum : collums){
-            if (std::find(m_tables[pos].getCollumnNames().begin(), m_tables[pos].getCollumnNames().end(), collum) != m_tables[pos].getCollumnNames().end()){
+        
+        auto firstTable = m_tables[pos].getCollumnNames();
+        auto secondTable = m_tables[pos2].getCollumnNames();
+
+        for (const auto& collum : collums) {
+
+            if (std::binary_search(firstTable.begin(), firstTable.end(), collum)) {
                 collums1.push_back(collum);
-            } else if (std::find(m_tables[pos2].getCollumnNames().begin(), m_tables[pos2].getCollumnNames().end(), collum) != m_tables[pos2].getCollumnNames().end()){
+                continue;
+            }
+            if (std::binary_search(secondTable.begin(), secondTable.end(), collum)) {
                 collums2.push_back(collum);
-            } else {
-                std::cout << "Collumn " << collum << " not found in " << m_tables[pos].getName() << " or " << m_tables[pos2].getName() << std::endl;
-                return false;
+                continue;
             }
+            std::cout << "Collumn " << collum << " not found in " << m_tables[pos].getName() << " or " << m_tables[pos2].getName() << std::endl;
+            return false;
         }
-        Table leftJoin("resultTable");
+        
+        Table leftJoin("LEFT JOIN");
         leftJoin.setCollumnNames(collums);
+        std::vector<std::string> result;
         for (const auto& row : m_tables[pos].getRows()){
-            std::vector<std::string> result;
-            for (const auto& collumn : collums1){
-                result.push_back(row[m_tables[pos].getCollumnNameIndex(collumn)]);
+            for (const auto& collumn : collums){
+                result.push_back(" ");
             }
-            for (auto i = 0; i < abs(collums1.size() - collums2.size()); i++){
-                result.push_back("");
+            for (const auto& collumn : collums1){
+                int index = leftJoin.getCollumnNameIndex(collumn);
+                if (index == -1) {
+                    std::cout << "BAD INDEX" << std::endl; //DEBUG LOG
+                }
+                result[index] = row[m_tables[pos].getCollumnNameIndex(collumn)];
             }
             leftJoin.insertRow(result);
             result.clear();
         }
-        if (parameters[1] == "=") {
-            
-        } else if (parameters[1] == "!=") {
+        int firstIndex = 0;
+        int secondIndex = 0;
 
+        if (m_tables[pos].getCollumnNameIndex(parameters[0]) != -1) {
+            firstIndex = m_tables[pos].getCollumnNameIndex(parameters[0]);
+            if (m_tables[pos2].getCollumnNameIndex(parameters[2])) {
+                secondIndex = m_tables[pos2].getCollumnNameIndex(parameters[2]);
+            } else {
+                std::cout << "There no " << parameters[2] << " collumn in table " << m_tables[pos2].getName() << std::endl;
+                return false;
+            }
+        } else if (m_tables[pos2].getCollumnNameIndex(parameters[0]) != -1) {
+            secondIndex = m_tables[pos2].getCollumnNameIndex(parameters[0]);
+            if (m_tables[pos].getCollumnNameIndex(parameters[2])) {
+                firstIndex = m_tables[pos2].getCollumnNameIndex(parameters[2]);
+            } else {
+                std::cout << "There no " << parameters[2] << " collumn in table " << m_tables[pos2].getName() << std::endl;
+                return false;
+            }
+        } else {
+            std::cout << "There no " << parameters[0] << " collumn in table " << m_tables[pos2].getName() << " or " << m_tables[pos].getName() << std::endl;
+            return false;
         }
-
+        
+        int count = std::min(m_tables[pos].getRowCount(), m_tables[pos2].getRowCount());
+        
+        if (parameters[1] == "=") { 
+            for (int i = 0; i < count; i++) {
+                if (m_tables[pos].getValue(i, firstIndex) == m_tables[pos2].getValue(i, secondIndex)) {
+                    for (const auto& column : collums2) {
+                        leftJoin.setValue(i, leftJoin.getCollumnNameIndex(column), m_tables[pos2].getValue(i, secondIndex));
+                    }
+                }
+            }
+        } else if (parameters[1] == "!=") {
+            for (int i = 0; i < count; i++) {
+                if (m_tables[pos].getValue(i, firstIndex) != m_tables[pos2].getValue(i, secondIndex)) {
+                    for (const auto& column : collums2) {
+                        leftJoin.setValue(i, leftJoin.getCollumnNameIndex(column), m_tables[pos2].getValue(i, secondIndex));
+                    }
+                }
+            }
+        }
+        parameters.erase(parameters.begin());
+        parameters.erase(parameters.begin());
+        parameters.erase(parameters.begin());
+        if (!parameters.empty()) {
+            std::vector<int> rows;
+            if (parameters[1] == "=") {
+                for (int i = 0; i < leftJoin.getRowCount(); i++) {
+                    if (leftJoin.getValue(i, leftJoin.getCollumnNameIndex(parameters[0])) == parameters[2]) {
+                        rows.push_back(i);
+                    }
+                }
+            } else {
+                for (int i = 0; i < leftJoin.getRowCount(); i++) {
+                    if (leftJoin.getValue(i, leftJoin.getCollumnNameIndex(parameters[0])) != parameters[2]) {
+                        rows.push_back(i);
+                    }
+                }
+            }
+            leftJoin.printCollumsOnRows(collums, rows);
+        } else {
+            leftJoin.printTable();
+        }
     }
+
     return true;
 }
 
@@ -268,6 +345,9 @@ int Table::getCollumnCount()
 
 void Table::insertRow(const std::vector<std::string>& row) 
 {
+    if (row.size() != m_collumnCount) {
+        std::cout << "DEBUG: WRONG LENGTH OF PARAMENTER row IN insertRow" << std::endl;
+    }
     m_rows.push_back(row);
     int row_index = m_rows.size() - 1;
     for (const auto& indexed : m_indexedRows) {
@@ -370,7 +450,7 @@ int Table::getRowCount()
     return m_rows.size();
 }
 
-const std::vector<std::vector<std::string>>& Table::getRows() 
+std::vector<std::vector<std::string>>& Table::getRows() 
 {
     return m_rows;
 }
@@ -389,6 +469,15 @@ std::string Table::getValue(int ypos, int xpos)
     }
     std::cout << "Wrong index in getValue" << std::endl;
     return std::string();
+}
+
+void Table::setValue(int ypos, int xpos, std::string value) 
+{
+    if (ypos < m_rows.size() && xpos < m_collumnNames.size()) {
+        m_rows[ypos][xpos] = value;
+        return;
+    }
+    std::cout << "Wrong index in setValue" << std::endl;
 }
 
 bool Table::deleteWithCondition(const std::vector<std::string>& condition) 
@@ -438,8 +527,6 @@ void Table::setIndexedRow(int index, std::string name)
 {
     m_indexedRows.emplace(name, std::map<std::string, std::vector<int>>());
 }
-
-
 
 db::db()
     : m_tables()
