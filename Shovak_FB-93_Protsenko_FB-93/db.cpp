@@ -204,17 +204,14 @@ bool db::selectFromTable(std::vector<std::string>& parameters)
         parameters.erase(parameters.begin());
         std::vector<std::string> collums1;
         std::vector<std::string> collums2;
-        
-        auto firstTable = m_tables[pos].getCollumnNames();
-        auto secondTable = m_tables[pos2].getCollumnNames();
 
         for (const auto& collum : collums) {
 
-            if (std::binary_search(firstTable.begin(), firstTable.end(), collum)) {
+            if (m_tables[pos].getCollumnNameIndex(collum) != -1) {
                 collums1.push_back(collum);
                 continue;
             }
-            if (std::binary_search(secondTable.begin(), secondTable.end(), collum)) {
+            if (m_tables[pos2].getCollumnNameIndex(collum) != -1) {
                 collums2.push_back(collum);
                 continue;
             }
@@ -487,16 +484,17 @@ bool Table::deleteWithCondition(const std::vector<std::string>& condition)
         std::cout << "There no column " << condition[0] << " in table " << m_name << std::endl;
         return false;
     }
+    int size = m_rows.size()-1;
     if (condition[1] == "=") {
-        for (int i = 0; i < m_rows.size(); i++){
-            if (m_rows[i][pos] == condition[2]) {
+        for (int i = size; i >= 0; i--){
+            if (m_rows[i][pos].find(condition[2]) != std::string::npos) {
                 deleteFromIndexed(i);
                 m_rows.erase(m_rows.begin() + i);
             }
         }
     } else if (condition[1] == "!=") {
-        for (int i = 0; i < m_rows.size(); i++){
-            if (m_rows[i][pos] != condition[2]) {
+        for (int i = size; i >= 0; i--){
+            if (m_rows[i][pos].find(condition[2]) == std::string::npos) {
                 deleteFromIndexed(i);
                 m_rows.erase(m_rows.begin() + i);
             }

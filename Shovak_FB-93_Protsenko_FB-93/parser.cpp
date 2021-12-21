@@ -206,10 +206,6 @@ std::vector<std::string> Parser::getSelectCommannd()
     }
 
     if (token.getType() == TokenType::WHERE) {
-        if (isLeftJoinRestricted) {
-            std::cout << "LEFT_JOIN afrer WHERE";
-            return std::vector<std::string>();
-        }
         token = m_lexer.getNextToken();
 
         if (token.getType() == TokenType::NAME) {
@@ -231,6 +227,10 @@ std::vector<std::string> Parser::getSelectCommannd()
             token = m_lexer.getNextToken();
         } else {
             errorWrongSymbol("VALUE", token.getValue());
+            return std::vector<std::string>();
+        }
+        if (token.getType() == TokenType::LEFT_JOIN && isLeftJoinRestricted) {
+            std::cout << "LEFT_JOIN after WHERE" << std::endl;
             return std::vector<std::string>();
         }
         if (token.getType() == TokenType::STOP) {
